@@ -1,0 +1,44 @@
+{
+  "name": "wild-plugins",
+  "private": false,
+  "version": "1.0.0",
+  "description": "Plugins Handler for Wildduck and Zone-MTA",
+  "keywords": [
+    "wildduck",
+    "zonemta",
+    "zone-mta",
+    "plugins",
+    "plugin"
+  ],
+  "homepage": "https://github.com/zone-eu/wild-plugins#readme",
+  "bugs": {
+    "url": "https://github.com/zone-eu/wild-plugins/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zone-eu/wild-plugins.git"
+  },
+  "license": "EUPL-1.1+",
+  "author": "NickOvt",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "lint": "npx eslint *.js test",
+    "lint:fix": "npx eslint --fix *.js test"
+  },
+  "devDependencies": {
+    "eslint": "^9.37.0",
+    "eslint-config-nodemailer": "^1.2.0",
+    "eslint-config-prettier": "^10.1.8"
+  },
+  "dependencies": {
+    "dgram": "^1.0.1",
+    "gelf": "^2.0.1",
+    "libmime": "^5.3.7",
+    "mailsplit": "^5.4.6",
+    "msgpack-js": "^0.3.0",
+    "nodemailer": "^7.0.9",
+    "npmlog": "^7.0.1",
+    "punycode.js": "^2.3.1"
+  }
+}
