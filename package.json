@@ -1,5 +1,5 @@
 {
-  "name": "wild-plugins",
+  "name": "@zone-eu/wild-plugins",
   "private": false,
   "version": "1.0.0",
   "description": "Plugins Handler for Wildduck and Zone-MTA",
