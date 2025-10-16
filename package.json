@@ -24,21 +24,22 @@
   "main": "index.js",
   "scripts": {
     "lint": "npx eslint *.js test",
-    "lint:fix": "npx eslint --fix *.js test"
+    "lint:fix": "npx eslint --fix *.js test",
+    "update": "rm -rf node_modules package-lock.json && ncu -u && npm install"
   },
   "devDependencies": {
-    "eslint": "^9.37.0",
-    "eslint-config-nodemailer": "^1.2.0",
-    "eslint-config-prettier": "^10.1.8"
+    "eslint": "9.37.0",
+    "eslint-config-nodemailer": "1.2.0",
+    "eslint-config-prettier": "10.1.8"
   },
   "dependencies": {
-    "dgram": "^1.0.1",
-    "gelf": "^2.0.1",
-    "libmime": "^5.3.7",
-    "mailsplit": "^5.4.6",
-    "msgpack-js": "^0.3.0",
-    "nodemailer": "^7.0.9",
-    "npmlog": "^7.0.1",
-    "punycode.js": "^2.3.1"
+    "@zone-eu/mailsplit": "5.4.7",
+    "dgram": "1.0.1",
+    "gelf": "2.0.1",
+    "libmime": "5.3.7",
+    "msgpack-js": "0.3.0",
+    "nodemailer": "7.0.9",
+    "npmlog": "7.0.1",
+    "punycode.js": "2.3.1"
   }
 }
