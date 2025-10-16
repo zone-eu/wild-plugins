@@ -2,7 +2,7 @@
 
 const path = require("path");
 const log = require("npmlog");
-const mailsplit = require("mailsplit");
+const mailsplit = require("@zone-eu/mailsplit");
 const PassThrough = require("stream").PassThrough;
 const addressTools = require("./src/address-tools");
 const dgram = require("dgram");
