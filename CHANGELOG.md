@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.2](https://github.com/zone-eu/wild-plugins/compare/v1.0.1...v1.0.2) (2025-10-16)
+
+
+### Bug Fixes
+
+* ZMSA-1: bump deps, update release workflow ([#6](https://github.com/zone-eu/wild-plugins/issues/6)) ([346899f](https://github.com/zone-eu/wild-plugins/commit/346899f9f03251f2c33a110b5cdfb589fa5afc81))
+
 ## [1.0.1](https://github.com/zone-eu/wild-plugins/compare/v1.0.0...v1.0.1) (2025-10-14)
 
 
