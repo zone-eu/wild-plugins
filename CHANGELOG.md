@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.4](https://github.com/zone-eu/wild-plugins/compare/v1.0.3...v1.0.4) (2025-11-03)
+
+
+### Bug Fixes
+
+* **plugin-paths:** ZMS-280 add option to specify corePluginsPath ([#10](https://github.com/zone-eu/wild-plugins/issues/10)) ([3e424c4](https://github.com/zone-eu/wild-plugins/commit/3e424c4806341b6f92f5433e3e64972ba58d1c25))
+
 ## [1.0.3](https://github.com/zone-eu/wild-plugins/compare/v1.0.2...v1.0.3) (2025-10-16)
 
 
