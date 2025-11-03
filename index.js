@@ -214,9 +214,10 @@ class PluginHandler {
 
     this.context = options.context || "receiver";
 
-    this.corePluginsPath = path.join(__dirname, "..", "plugins");
+    this.corePluginsPath =
+      options.corePluginsPath || path.join(process.cwd(), "plugins");
     this.pluginsPath =
-      options.pluginsPath || path.join(__dirname, "..", "plugins");
+      options.pluginsPath || path.join(process.cwd(), "plugins");
 
     this.logger = options.logger || log;
 
