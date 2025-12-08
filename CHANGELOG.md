@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.5](https://github.com/zone-eu/wild-plugins/compare/v1.0.4...v1.0.5) (2025-12-08)
+
+
+### Bug Fixes
+
+* **workflows:** ZMSA-46: update workflows ([#12](https://github.com/zone-eu/wild-plugins/issues/12)) ([d31c5f8](https://github.com/zone-eu/wild-plugins/commit/d31c5f8ff6974fbabb59c3aeda8389e4fc0caf71))
+
 ## [1.0.4](https://github.com/zone-eu/wild-plugins/compare/v1.0.3...v1.0.4) (2025-11-03)
 
 
