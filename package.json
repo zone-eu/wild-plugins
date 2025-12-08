@@ -28,17 +28,17 @@
     "update": "rm -rf node_modules package-lock.json && ncu -u && npm install"
   },
   "devDependencies": {
-    "eslint": "9.37.0",
+    "eslint": "9.39.1",
     "eslint-config-nodemailer": "1.2.0",
     "eslint-config-prettier": "10.1.8"
   },
   "dependencies": {
-    "@zone-eu/mailsplit": "5.4.7",
+    "@zone-eu/mailsplit": "5.4.8",
     "dgram": "1.0.1",
     "gelf": "2.0.1",
     "libmime": "5.3.7",
     "msgpack-js": "0.3.0",
-    "nodemailer": "7.0.9",
+    "nodemailer": "7.0.11",
     "npmlog": "7.0.1",
     "punycode.js": "2.3.1"
   }
