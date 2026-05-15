@@ -15,11 +15,15 @@ import type {
   PluginInstanceContext,
   PluginConfigInput,
   PluginDatabase,
+  PluginQueue,
   RewriteEventHandler,
   RewriteFilterFunc,
   SmtpResponseError,
   StreamEventHandler,
   StreamFilterFunc,
+  MessageInfo,
+  ValidatedAddressList,
+  PluginsConfig
 } from "./types";
 import type Headers from "@zone-eu/mailsplit/lib/headers";
 import type { Readable, Writable } from "node:stream";
@@ -41,18 +45,18 @@ declare class PluginInstance implements PluginInstanceContext {
   addStreamHook(filterFunc: StreamFilterFunc, eventHandler: StreamEventHandler): void;
   addAnalyzerHook(eventHandler: AnalyzerEventHandler): void;
   addAPI(method: string, path: string, callback: ApiCallback): void;
-  getQueue(): unknown;
-  validateAddress(headers: Headers, key: string): import("./types").ValidatedAddressList;
+  getQueue(): PluginQueue | false;
+  validateAddress(headers: Headers, key: string): ValidatedAddressList;
   drop(
     envelope: Envelope | string,
     description?: string,
-    messageInfo?: import("./types").MessageInfo | string,
+    messageInfo?: MessageInfo | string,
     responseText?: string
   ): Error;
   reject(
     envelope: Envelope | string,
     description?: string,
-    messageInfo?: import("./types").MessageInfo | string,
+    messageInfo?: MessageInfo | string,
     responseText?: string
   ): SmtpResponseError;
   remotelog(id: unknown, seq: unknown, action: string, data?: AnyRecord): void;
@@ -62,7 +66,7 @@ declare class PluginInstance implements PluginInstanceContext {
 declare class PluginHandler {
   constructor(options?: PluginHandlerOptions);
   options: PluginHandlerOptions;
-  queue: unknown;
+  queue: PluginQueue | false;
   hooks: Map<string, Hook[]>;
   rewriters: Set<{
     title?: string;
@@ -87,7 +91,7 @@ declare class PluginHandler {
   gelf: GelfEmitter;
   apiServer?: ApiServer;
   load(done: DoneCallback): NodeJS.Immediate | void;
-  preparePlugins(pluginData?: import("./types").PluginsConfig): PluginDefinition[];
+  preparePlugins(pluginData?: PluginsConfig): PluginDefinition[];
   addHook(title: string | undefined, name: string, action: HookAction): void;
   runRewriteHooks(envelope: Envelope, splitter: Readable, output: Writable): void;
   runStreamHooks(envelope: Envelope, splitter: Readable, output: Writable): void;

@@ -25,6 +25,7 @@ const os = require("os");
  * @typedef {import("./types").MessageInfo} MessageInfo
  * @typedef {import("./types").PluginDefinition} PluginDefinition
  * @typedef {import("./types").PluginHandlerOptions} PluginHandlerOptions
+ * @typedef {import("./types").PluginQueue} PluginQueue
  * @typedef {import("./types").RewriteEventHandler} RewriteEventHandler
  * @typedef {import("./types").RewriteFilterFunc} RewriteFilterFunc
  * @typedef {import("./types").SmtpResponseError} SmtpResponseError
@@ -139,7 +140,7 @@ class PluginInstance {
   }
 
   /**
-   * @returns {unknown}
+   * @returns {PluginQueue | false}
    */
   getQueue() {
     return this.manager.queue;
@@ -310,7 +311,7 @@ class PluginHandler {
     options = options || {};
     this.options = options;
 
-    /** @type {unknown} */
+    /** @type {PluginQueue | false} */
     this.queue = false;
 
     /** @type {Map<string, Hook[]>} */

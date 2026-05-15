@@ -34,6 +34,7 @@
     "@types/node": "25.7.0",
     "@types/nodemailer": "8.0.0",
     "@types/npmlog": "7.0.0",
+    "@zone-eu/zone-mta": "3.10.16",
     "eslint": "10.3.0",
     "eslint-config-nodemailer": "1.2.0",
     "eslint-config-prettier": "10.1.8",

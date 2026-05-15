@@ -8,10 +8,12 @@ import type {
 } from "@zone-eu/mailsplit/lib/types";
 import type { Db } from "mongodb";
 import type Redis, { RedisOptions } from "ioredis";
+import type ZoneMailQueue from "@zone-eu/zone-mta/lib/mail-queue";
 
 export type AnyRecord = Record<string, any>;
 export type DoneCallback = (err?: Error | null) => void;
 export type MaybePromise<T = void> = T | Promise<T>;
+export type PluginQueue = Partial<ZoneMailQueue> & AnyRecord;
 
 export interface Logger {
   info(...args: any[]): void;
@@ -207,6 +209,10 @@ export type AnalyzerEventHandler = (
   output: Writable
 ) => void;
 export type ApiCallback = (...args: any[]) => any;
+export type ApiRouteRegistrar = (
+  path: string,
+  ...handlers: ApiCallback[]
+) => unknown;
 
 export interface PluginInstanceContext {
   manager: PluginHandlerContext;
@@ -222,7 +228,7 @@ export interface PluginInstanceContext {
   addStreamHook(filterFunc: StreamFilterFunc, eventHandler: StreamEventHandler): void;
   addAnalyzerHook(eventHandler: AnalyzerEventHandler): void;
   addAPI(method: string, path: string, callback: ApiCallback): void;
-  getQueue(): unknown;
+  getQueue(): PluginQueue | false;
   validateAddress(headers: Headers, key: string): ValidatedAddressList;
   drop(
     envelope: Envelope | string,
@@ -241,12 +247,25 @@ export interface PluginInstanceContext {
 }
 
 export interface ApiServer {
-  server?: Record<string, (path: string, callback: ApiCallback) => unknown>;
+  server?: HttpRouteServer;
+}
+
+export interface HttpRouteServer extends AnyRecord {
+  get: ApiRouteRegistrar;
+  post: ApiRouteRegistrar;
+  put: ApiRouteRegistrar;
+  delete?: ApiRouteRegistrar;
+  del?: ApiRouteRegistrar;
+  patch?: ApiRouteRegistrar;
+  head?: ApiRouteRegistrar;
+  options?: ApiRouteRegistrar;
+  opts?: ApiRouteRegistrar;
+  [method: string]: any;
 }
 
 export interface PluginHandlerContext {
   options: PluginHandlerOptions;
-  queue: unknown;
+  queue: PluginQueue | false;
   hooks: Map<string, Hook[]>;
   rewriters: Set<{
     title?: string;
