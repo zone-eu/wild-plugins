@@ -1,3 +1,4 @@
+import type { EventEmitter } from "node:events";
 import type { Readable, Writable } from "node:stream";
 import type Headers from "@zone-eu/mailsplit/lib/headers";
 import type {
@@ -6,14 +7,257 @@ import type {
   RewriterNode,
   StreamerNode,
 } from "@zone-eu/mailsplit/lib/types";
-import type { Db } from "mongodb";
-import type Redis, { RedisOptions } from "ioredis";
-import type ZoneMailQueue from "@zone-eu/zone-mta/lib/mail-queue";
 
 export type AnyRecord = Record<string, any>;
 export type DoneCallback = (err?: Error | null) => void;
 export type MaybePromise<T = void> = T | Promise<T>;
-export type PluginQueue = Partial<ZoneMailQueue> & AnyRecord;
+export type QueueCallback<T = void> = (err?: Error | null, result?: T) => void;
+export type PluginQueue = Partial<MailQueue> & AnyRecord;
+
+export interface MongoCollectionLike extends AnyRecord {
+  collectionName?: string;
+  namespace?: string;
+  aggregate(...args: any[]): any;
+  bulkWrite(...args: any[]): any;
+  countDocuments(...args: any[]): any;
+  createIndex(...args: any[]): any;
+  deleteMany(...args: any[]): any;
+  deleteOne(...args: any[]): any;
+  distinct(...args: any[]): any;
+  drop(...args: any[]): any;
+  find(...args: any[]): any;
+  findOne(...args: any[]): any;
+  findOneAndDelete(...args: any[]): any;
+  findOneAndReplace(...args: any[]): any;
+  findOneAndUpdate(...args: any[]): any;
+  indexes(...args: any[]): any;
+  insertMany(...args: any[]): any;
+  insertOne(...args: any[]): any;
+  rename(...args: any[]): any;
+  replaceOne(...args: any[]): any;
+  updateMany(...args: any[]): any;
+  updateOne(...args: any[]): any;
+  watch(...args: any[]): any;
+}
+
+export interface MongoDbLike extends AnyRecord {
+  databaseName?: string;
+  namespace?: string;
+  options?: AnyRecord;
+  admin(...args: any[]): any;
+  aggregate(...args: any[]): any;
+  collection(...args: any[]): MongoCollectionLike;
+  collections(...args: any[]): any;
+  command(...args: any[]): any;
+  createCollection(...args: any[]): any;
+  createIndex(...args: any[]): any;
+  db(...args: any[]): MongoDbLike;
+  dropCollection(...args: any[]): any;
+  dropDatabase(...args: any[]): any;
+  indexInformation(...args: any[]): any;
+  listCollections(...args: any[]): any;
+  profilingLevel(...args: any[]): any;
+  removeUser(...args: any[]): any;
+  renameCollection(...args: any[]): any;
+  runCursorCommand(...args: any[]): any;
+  setProfilingLevel(...args: any[]): any;
+  stats(...args: any[]): any;
+  watch(...args: any[]): any;
+}
+
+export interface MongoGridFSBucketLike extends AnyRecord {
+  openDownloadStream(...args: any[]): Readable;
+  openDownloadStreamByName(...args: any[]): Readable;
+  openUploadStream(...args: any[]): Writable;
+  openUploadStreamWithId(...args: any[]): Writable;
+  delete(...args: any[]): any;
+  drop(...args: any[]): any;
+  find(...args: any[]): any;
+  rename(...args: any[]): any;
+}
+
+export interface RedisLike extends AnyRecord {
+  options?: RedisOptionsLike;
+  status?: string;
+  stream?: unknown;
+  connector?: unknown;
+  commandQueue?: unknown;
+  offlineQueue?: unknown;
+  condition?: unknown;
+  isCluster?: boolean;
+  connect(...args: any[]): any;
+  disconnect(...args: any[]): any;
+  duplicate(...args: any[]): RedisLike;
+  defineCommand(...args: any[]): any;
+  pipeline(...args: any[]): any;
+  multi(...args: any[]): any;
+  quit(...args: any[]): any;
+  get(...args: any[]): any;
+  set(...args: any[]): any;
+  del(...args: any[]): any;
+  exists(...args: any[]): any;
+  expire(...args: any[]): any;
+  hget(...args: any[]): any;
+  hgetall(...args: any[]): any;
+  hset(...args: any[]): any;
+  incr(...args: any[]): any;
+  publish(...args: any[]): any;
+  subscribe(...args: any[]): any;
+  unsubscribe(...args: any[]): any;
+}
+
+export interface RedisOptionsLike extends AnyRecord {
+  host?: string;
+  port?: number;
+  path?: string;
+  username?: string;
+  password?: string;
+  db?: number;
+  keyPrefix?: string;
+  tls?: AnyRecord;
+  family?: number;
+  connectTimeout?: number;
+  commandTimeout?: number;
+  enableOfflineQueue?: boolean;
+  enableReadyCheck?: boolean;
+  lazyConnect?: boolean;
+  maxRetriesPerRequest?: number | null;
+  retryStrategy?: (times: number) => number | void | null;
+}
+
+export type Db = MongoDbLike;
+export type GridFSBucket = MongoGridFSBucketLike;
+export type Redis = RedisLike;
+export type RedisOptions = RedisOptionsLike;
+export type UpdateFilterLike<T> = AnyRecord & Partial<T>;
+export type UpdateFilter<T> = UpdateFilterLike<T>;
+
+export interface QueueDelivery extends AnyRecord {
+  id: string;
+  seq: string;
+  recipient?: string;
+  domain?: string;
+  sendingZone?: string;
+  sessionId?: string;
+  queued?: Date;
+  created?: Date;
+  locked?: boolean;
+  lockTime?: number;
+  assigned?: string;
+  _lock?: string;
+}
+
+export interface QueueShiftOptions extends AnyRecord {
+  domain?: string;
+  toDomainOnly?: boolean;
+  lockOwner?: string | false;
+  getDomainConfig?: (domain: string, key: string) => unknown;
+}
+
+export interface QueueInfo extends AnyRecord {
+  meta: Envelope | AnyRecord | false;
+  messages: AnyRecord[];
+}
+
+export interface QueueCountResult {
+  entries: Array<{ key: string; value: number }>;
+  rows: number;
+}
+
+export interface QueueListEntry {
+  id: string;
+  zone: string;
+  recipient: string;
+  created: string;
+  queued: string;
+  deferred: number;
+}
+
+export interface MailQueue {
+  options: AnyRecord;
+  instanceId: string;
+  mongodb: MongoDbLike | false;
+  gridstore: MongoGridFSBucketLike | false;
+  closing: boolean;
+  garbageTimer: NodeJS.Timeout | null;
+  queueCounterTimer?: NodeJS.Timeout | null;
+  seqIndex: { get(): string };
+  maildrop: unknown;
+  cache: AnyRecord;
+  locks: AnyRecord;
+  store(
+    id: string | false | null | undefined,
+    stream: Readable,
+    callback: QueueCallback<string>
+  ): void;
+  setMeta(id: string, data: Envelope | AnyRecord, callback: DoneCallback): void;
+  getMeta(
+    id: string,
+    callback: QueueCallback<Envelope | AnyRecord | false>
+  ): void;
+  retrieve(id: string): Readable;
+  push(
+    id: string,
+    envelope: Envelope,
+    callback: QueueCallback<string>
+  ): EventEmitter | NodeJS.Immediate | void;
+  shift(
+    zone: string,
+    options: QueueShiftOptions,
+    callback: QueueCallback<QueueDelivery | false>
+  ): void;
+  shift(zone: string, callback: QueueCallback<QueueDelivery | false>): void;
+  remove(
+    id: string,
+    seq: string | false | null | undefined,
+    callback: DoneCallback
+  ): void;
+  update(
+    id: string,
+    seq: string | false | null | undefined,
+    update: UpdateFilterLike<QueueDelivery> | AnyRecord,
+    callback: QueueCallback<number>
+  ): void;
+  getDelivery(
+    id: string | number,
+    seq: string,
+    callback: QueueCallback<QueueDelivery | false>
+  ): void;
+  releaseDelivery(
+    delivery: QueueDelivery,
+    callback: QueueCallback<boolean>
+  ): void;
+  releaseDeliveryAsync(delivery: QueueDelivery): Promise<boolean>;
+  deferDelivery(
+    delivery: QueueDelivery,
+    ttl: number,
+    responseData: AnyRecord,
+    callback: QueueCallback<boolean>
+  ): void;
+  getInfo(id: string, callback: QueueCallback<QueueInfo | false>): void;
+  removeMessage(id: string, callback: QueueCallback<boolean>): void;
+  clearGarbage(): Promise<void>;
+  checkGarbage(): void;
+  queueCounterUpdate(): void;
+  startPeriodicCheck(): void;
+  stopPeriodicCheck(): void;
+  listQueued(
+    zone: string,
+    type: "queued" | "deferred",
+    sort: AnyRecord | false | null | undefined,
+    start: number | false | null | undefined,
+    maxItems: number,
+    callback: QueueCallback<QueueListEntry[]>
+  ): void;
+  count(
+    zones: string | string[],
+    type: "queued" | "deferred",
+    callback: QueueCallback<QueueCountResult>
+  ): void;
+  stop(): void;
+  init(callback: QueueCallback<boolean>): void;
+  generateId(callback: QueueCallback<string>): void;
+}
 
 export interface Logger {
   info(...args: any[]): void;
@@ -44,17 +288,17 @@ export interface LogOptions {
 }
 
 export interface QueueConfig {
-  connection: RedisOptions;
+  connection: RedisOptionsLike;
   prefix: string;
 }
 
 export interface PluginDatabase extends AnyRecord {
-  database?: Db | false;
-  gridfs?: Db | false;
-  users?: Db | false;
-  senderDb?: Db | false;
-  redis?: Redis;
-  redisConfig?: RedisOptions;
+  database?: MongoDbLike | false;
+  gridfs?: MongoDbLike | false;
+  users?: MongoDbLike | false;
+  senderDb?: MongoDbLike | false;
+  redis?: RedisLike;
+  redisConfig?: RedisOptionsLike;
   queueConf?: QueueConfig;
   [key: string]: any;
 }
@@ -220,8 +464,8 @@ export interface PluginInstanceContext {
   logger: Logger;
   db: PluginDatabase;
   config: PluginConfigInput | AnyRecord;
-  mongodb?: Db | false;
-  redis?: Redis;
+  mongodb?: MongoDbLike | false;
+  redis?: RedisLike;
   gelf: GelfEmitter;
   addHook(name: string, action: HookAction): void;
   addRewriteHook(filterFunc: RewriteFilterFunc, eventHandler: RewriteEventHandler): void;

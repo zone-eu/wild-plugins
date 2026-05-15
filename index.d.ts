@@ -22,13 +22,13 @@ import type {
   StreamEventHandler,
   StreamFilterFunc,
   MessageInfo,
+  MongoDbLike,
+  RedisLike,
   ValidatedAddressList,
   PluginsConfig
 } from "./types";
 import type Headers from "@zone-eu/mailsplit/lib/headers";
 import type { Readable, Writable } from "node:stream";
-import type { Db } from "mongodb";
-import type Redis from "ioredis";
 
 declare class PluginInstance implements PluginInstanceContext {
   constructor(manager: PluginHandler, options: PluginDefinition);
@@ -37,8 +37,8 @@ declare class PluginInstance implements PluginInstanceContext {
   logger: Logger;
   db: PluginDatabase;
   config: PluginConfigInput | AnyRecord;
-  mongodb?: Db | false;
-  redis?: Redis;
+  mongodb?: MongoDbLike | false;
+  redis?: RedisLike;
   gelf: GelfEmitter;
   addHook(name: string, action: HookAction): void;
   addRewriteHook(filterFunc: RewriteFilterFunc, eventHandler: RewriteEventHandler): void;
