@@ -36,18 +36,18 @@ const os = require("os");
 
 /**
  * @param {Envelope | string} envelope
- * @returns {{ id: unknown, envelope: Envelope }}
+ * @returns {{ id: string, envelope: Envelope }}
  */
 function getEnvelopeContext(envelope) {
   if (envelope && typeof envelope === "object") {
     return {
-      id: envelope.id,
+      id: (envelope.id ?? "").toString(),
       envelope,
     };
   }
 
   return {
-    id: envelope,
+    id: (envelope ?? "").toString(),
     envelope: {},
   };
 }
