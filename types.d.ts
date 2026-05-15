@@ -1,4 +1,4 @@
-import type { Transform, Readable, Writable } from "node:stream";
+import type { Readable, Writable } from "node:stream";
 import type Headers from "@zone-eu/mailsplit/lib/headers";
 import type {
   HeaderLine,
@@ -13,13 +13,13 @@ export type AnyRecord = Record<string, any>;
 export type DoneCallback = (err?: Error | null) => void;
 export type MaybePromise<T = void> = T | Promise<T>;
 
-export interface LoggerLike {
+export interface Logger {
   info(...args: any[]): void;
   error(...args: any[]): void;
   verbose(...args: any[]): void;
 }
 
-export interface GelfLike {
+export interface GelfEmitter {
   emit(event: string, entry: AnyRecord): void;
 }
 
@@ -41,22 +41,18 @@ export interface LogOptions {
   remote?: RemoteLogOptions;
 }
 
-export type MongoDatabaseLike = Db;
-export type RedisConnectionLike = Redis;
-export type RedisConnectionOptions = RedisOptions;
-
 export interface QueueConfig {
-  connection: RedisConnectionOptions;
+  connection: RedisOptions;
   prefix: string;
 }
 
 export interface PluginDatabase extends AnyRecord {
-  database?: MongoDatabaseLike | false;
-  gridfs?: MongoDatabaseLike | false;
-  users?: MongoDatabaseLike | false;
-  senderDb?: MongoDatabaseLike | false;
-  redis?: RedisConnectionLike;
-  redisConfig?: RedisConnectionOptions;
+  database?: Db | false;
+  gridfs?: Db | false;
+  users?: Db | false;
+  senderDb?: Db | false;
+  redis?: Redis;
+  redisConfig?: RedisOptions;
   queueConf?: QueueConfig;
   [key: string]: any;
 }
@@ -76,7 +72,7 @@ export interface PluginHandlerOptions {
   corePluginsPath?: string;
   pluginsPath?: string;
   plugins?: PluginsConfig;
-  logger?: LoggerLike;
+  logger?: Logger;
   db?: PluginDatabase;
   config?: AnyRecord;
   log?: LogOptions;
@@ -84,7 +80,7 @@ export interface PluginHandlerOptions {
 
 export interface PluginModule {
   title?: string;
-  init(plugin: PluginInstanceLike, done: DoneCallback): MaybePromise;
+  init(plugin: PluginInstanceContext, done: DoneCallback): MaybePromise;
 }
 
 export interface PluginDefinition {
@@ -95,7 +91,7 @@ export interface PluginDefinition {
   title?: string;
   module?: PluginModule;
   db?: PluginDatabase;
-  logger?: LoggerLike;
+  logger?: Logger;
   log?: LogOptions;
 }
 
@@ -212,15 +208,15 @@ export type AnalyzerEventHandler = (
 ) => void;
 export type ApiCallback = (...args: any[]) => any;
 
-export interface PluginInstanceLike {
-  manager: PluginHandlerLike;
+export interface PluginInstanceContext {
+  manager: PluginHandlerContext;
   options: PluginDefinition;
-  logger: LoggerLike;
+  logger: Logger;
   db: PluginDatabase;
   config: PluginConfigInput | AnyRecord;
-  mongodb?: MongoDatabaseLike | false;
-  redis?: RedisConnectionLike;
-  gelf: GelfLike;
+  mongodb?: Db | false;
+  redis?: Redis;
+  gelf: GelfEmitter;
   addHook(name: string, action: HookAction): void;
   addRewriteHook(filterFunc: RewriteFilterFunc, eventHandler: RewriteEventHandler): void;
   addStreamHook(filterFunc: StreamFilterFunc, eventHandler: StreamEventHandler): void;
@@ -244,11 +240,11 @@ export interface PluginInstanceLike {
   loggelf(message: string | GelfMessage): void;
 }
 
-export interface ApiServerLike {
+export interface ApiServer {
   server?: Record<string, (path: string, callback: ApiCallback) => unknown>;
 }
 
-export interface PluginHandlerLike {
+export interface PluginHandlerContext {
   options: PluginHandlerOptions;
   queue: unknown;
   hooks: Map<string, Hook[]>;
@@ -269,11 +265,11 @@ export interface PluginHandlerLike {
   context: string;
   corePluginsPath: string;
   pluginsPath: string;
-  logger: LoggerLike;
+  logger: Logger;
   loaded: PluginDefinition[];
   plugins: PluginDefinition[];
-  gelf: GelfLike;
-  apiServer?: ApiServerLike;
+  gelf: GelfEmitter;
+  apiServer?: ApiServer;
   addHook(title: string | undefined, name: string, action: HookAction): void;
   remotelog(id: unknown, seq: unknown, action: string, data?: AnyRecord): void;
   loggelf(message: string | GelfMessage): void;
@@ -310,5 +306,3 @@ export interface ValidatedAddressList {
 export interface RatioItem extends AnyRecord {
   ratio?: number;
 }
-
-export type StreamLike = Transform;

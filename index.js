@@ -22,7 +22,6 @@ const os = require("os");
  * @typedef {import("./types").GelfMessage} GelfMessage
  * @typedef {import("./types").Hook} Hook
  * @typedef {import("./types").HookAction} HookAction
- * @typedef {import("./types").LoggerLike} LoggerLike
  * @typedef {import("./types").MessageInfo} MessageInfo
  * @typedef {import("./types").PluginDefinition} PluginDefinition
  * @typedef {import("./types").PluginHandlerOptions} PluginHandlerOptions
@@ -31,7 +30,6 @@ const os = require("os");
  * @typedef {import("./types").SmtpResponseError} SmtpResponseError
  * @typedef {import("./types").StreamEventHandler} StreamEventHandler
  * @typedef {import("./types").StreamFilterFunc} StreamFilterFunc
- * @typedef {import("./types").StreamLike} StreamLike
  * @typedef {import("./types").ValidatedAddressList} ValidatedAddressList
  */
 
@@ -338,7 +336,7 @@ class PluginHandler {
 
     this.plugins = this.preparePlugins(options.plugins);
 
-    /** @type {import("./types").ApiServerLike | undefined} */
+    /** @type {import("./types").ApiServer | undefined} */
     this.apiServer = undefined;
 
     this.gelf =
@@ -531,7 +529,7 @@ class PluginHandler {
   }
 
   /**
-   * @param {string} title
+   * @param {string | undefined} title
    * @param {string} name
    * @param {HookAction} action
    * @returns {void}
@@ -571,7 +569,7 @@ class PluginHandler {
         hook.eventHandler(envelope, data.node, data.decoder, data.encoder);
       });
 
-      /** @type {StreamLike} */ (rewriter).once("error", (err) => {
+      /** @type {import("node:stream").Transform} */ (rewriter).once("error", (err) => {
         input.emit("error", err);
       });
 
@@ -606,7 +604,7 @@ class PluginHandler {
       });
 
       stream.once("error", (err) => {
-        /** @type {StreamLike} */ (streamer).emit("error", err);
+        /** @type {import("node:stream").Transform} */ (streamer).emit("error", err);
       });
 
       stream.pipe(streamer);

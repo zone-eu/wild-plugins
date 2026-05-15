@@ -2,16 +2,19 @@ import type {
   AnalyzerEventHandler,
   ApiCallback,
   AnyRecord,
+  ApiServer,
   DoneCallback,
   Envelope,
-  GelfLike,
+  GelfEmitter,
   GelfMessage,
   Hook,
   HookAction,
-  LoggerLike,
+  Logger,
   PluginDefinition,
   PluginHandlerOptions,
-  PluginInstanceLike,
+  PluginInstanceContext,
+  PluginConfigInput,
+  PluginDatabase,
   RewriteEventHandler,
   RewriteFilterFunc,
   SmtpResponseError,
@@ -20,17 +23,19 @@ import type {
 } from "./types";
 import type Headers from "@zone-eu/mailsplit/lib/headers";
 import type { Readable, Writable } from "node:stream";
+import type { Db } from "mongodb";
+import type Redis from "ioredis";
 
-declare class PluginInstance implements PluginInstanceLike {
+declare class PluginInstance implements PluginInstanceContext {
   constructor(manager: PluginHandler, options: PluginDefinition);
   manager: PluginHandler;
   options: PluginDefinition;
-  logger: LoggerLike;
-  db: import("./types").PluginDatabase;
-  config: import("./types").PluginConfigInput | AnyRecord;
-  mongodb?: import("./types").MongoDatabaseLike | false;
-  redis?: import("./types").RedisConnectionLike;
-  gelf: GelfLike;
+  logger: Logger;
+  db: PluginDatabase;
+  config: PluginConfigInput | AnyRecord;
+  mongodb?: Db | false;
+  redis?: Redis;
+  gelf: GelfEmitter;
   addHook(name: string, action: HookAction): void;
   addRewriteHook(filterFunc: RewriteFilterFunc, eventHandler: RewriteEventHandler): void;
   addStreamHook(filterFunc: StreamFilterFunc, eventHandler: StreamEventHandler): void;
@@ -76,11 +81,11 @@ declare class PluginHandler {
   context: string;
   corePluginsPath: string;
   pluginsPath: string;
-  logger: LoggerLike;
+  logger: Logger;
   loaded: PluginDefinition[];
   plugins: PluginDefinition[];
-  gelf: GelfLike;
-  apiServer?: import("./types").ApiServerLike;
+  gelf: GelfEmitter;
+  apiServer?: ApiServer;
   load(done: DoneCallback): NodeJS.Immediate | void;
   preparePlugins(pluginData?: import("./types").PluginsConfig): PluginDefinition[];
   addHook(title: string | undefined, name: string, action: HookAction): void;
