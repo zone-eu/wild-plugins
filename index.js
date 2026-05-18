@@ -10,7 +10,53 @@ const msgpack = require("msgpack-js");
 const Gelf = require("gelf");
 const os = require("os");
 
+/**
+ * @typedef {import("node:stream").Readable} Readable
+ * @typedef {import("node:stream").Writable} Writable
+ * @typedef {import("@zone-eu/mailsplit/lib/headers")} Headers
+ * @typedef {import("./types").AnalyzerEventHandler} AnalyzerEventHandler
+ * @typedef {import("./types").ApiCallback} ApiCallback
+ * @typedef {import("./types").AnyRecord} AnyRecord
+ * @typedef {import("./types").DoneCallback} DoneCallback
+ * @typedef {import("./types").Envelope} Envelope
+ * @typedef {import("./types").GelfMessage} GelfMessage
+ * @typedef {import("./types").Hook} Hook
+ * @typedef {import("./types").HookAction} HookAction
+ * @typedef {import("./types").MessageInfo} MessageInfo
+ * @typedef {import("./types").PluginDefinition} PluginDefinition
+ * @typedef {import("./types").PluginHandlerOptions} PluginHandlerOptions
+ * @typedef {import("./types").PluginQueue} PluginQueue
+ * @typedef {import("./types").RewriteEventHandler} RewriteEventHandler
+ * @typedef {import("./types").RewriteFilterFunc} RewriteFilterFunc
+ * @typedef {import("./types").SmtpResponseError} SmtpResponseError
+ * @typedef {import("./types").StreamEventHandler} StreamEventHandler
+ * @typedef {import("./types").StreamFilterFunc} StreamFilterFunc
+ * @typedef {import("./types").ValidatedAddressList} ValidatedAddressList
+ */
+
+/**
+ * @param {Envelope | string} envelope
+ * @returns {{ id: string, envelope: Envelope }}
+ */
+function getEnvelopeContext(envelope) {
+  if (envelope && typeof envelope === "object") {
+    return {
+      id: (envelope.id ?? "").toString(),
+      envelope,
+    };
+  }
+
+  return {
+    id: (envelope ?? "").toString(),
+    envelope: {},
+  };
+}
+
 class PluginInstance {
+  /**
+   * @param {PluginHandler} manager
+   * @param {PluginDefinition} options
+   */
   constructor(manager, options) {
     this.manager = manager;
     this.options = options || {};
@@ -25,6 +71,10 @@ class PluginInstance {
         ? new Gelf(this.options.log.gelf.options)
         : {
             // placeholder
+            /**
+             * @param {string} ev
+             * @param {AnyRecord} entry
+             */
             emit: (ev, entry) =>
               this.logger.info(
                 `Plugins/${process.pid}/GELF`,
@@ -33,10 +83,20 @@ class PluginInstance {
           };
   }
 
+  /**
+   * @param {string} name
+   * @param {HookAction} action
+   * @returns {void}
+   */
   addHook(name, action) {
     this.manager.addHook(this.options.title, name, action);
   }
 
+  /**
+   * @param {RewriteFilterFunc} filterFunc
+   * @param {RewriteEventHandler} eventHandler
+   * @returns {void}
+   */
   addRewriteHook(filterFunc, eventHandler) {
     this.manager.rewriters.add({
       title: this.options.title,
@@ -45,6 +105,11 @@ class PluginInstance {
     });
   }
 
+  /**
+   * @param {StreamFilterFunc} filterFunc
+   * @param {StreamEventHandler} eventHandler
+   * @returns {void}
+   */
   addStreamHook(filterFunc, eventHandler) {
     this.manager.streamers.add({
       title: this.options.title,
@@ -53,6 +118,10 @@ class PluginInstance {
     });
   }
 
+  /**
+   * @param {AnalyzerEventHandler} eventHandler
+   * @returns {void}
+   */
   addAnalyzerHook(eventHandler) {
     this.manager.analyzers.add({
       title: this.options.title,
@@ -60,37 +129,55 @@ class PluginInstance {
     });
   }
 
+  /**
+   * @param {string} method
+   * @param {string} path
+   * @param {ApiCallback} callback
+   * @returns {void}
+   */
   addAPI(method, path, callback) {
     this.manager.addAPIEndpoint(this.options.key, method, path, callback);
   }
 
+  /**
+   * @returns {PluginQueue | false}
+   */
   getQueue() {
     return this.manager.queue;
   }
 
+  /**
+   * @param {Headers} headers
+   * @param {string} key
+   * @returns {ValidatedAddressList}
+   */
   validateAddress(headers, key) {
     return addressTools.validateAddress(headers, key);
   }
 
+  /**
+   * @param {Envelope | string} envelope
+   * @param {string} [description]
+   * @param {MessageInfo | string} [messageInfo]
+   * @param {string} [responseText]
+   * @returns {Error}
+   */
   drop(envelope, description, messageInfo, responseText) {
-    let id;
-
-    if (typeof envelope === "object") {
-      id = envelope.id;
-    } else {
-      id = envelope;
-      envelope = {};
-    }
+    let envelopeContext = getEnvelopeContext(envelope);
+    let id = envelopeContext.id;
+    let envelopeData = envelopeContext.envelope;
 
     description = (description || "").toString().trim();
+    /** @type {AnyRecord} */
     let keys;
-    if (messageInfo && typeof messageInfo.keys === "function") {
-      keys = messageInfo.keys();
+    let info = /** @type {MessageInfo} */ (messageInfo);
+    if (messageInfo && typeof info.keys === "function") {
+      keys = info.keys();
     } else {
       keys = {};
     }
-    if (messageInfo && typeof messageInfo.format === "function") {
-      messageInfo = messageInfo.format();
+    if (messageInfo && typeof info.format === "function") {
+      messageInfo = info.format();
     }
     messageInfo = (messageInfo || "").toString().trim();
     responseText = (responseText || "").toString();
@@ -110,8 +197,8 @@ class PluginInstance {
       "transtype",
       "user",
     ]) {
-      if (envelope[key] && !(key in keys)) {
-        keys[key] = envelope[key];
+      if (envelopeData[key] && !(key in keys)) {
+        keys[key] = envelopeData[key];
       }
     }
 
@@ -130,26 +217,30 @@ class PluginInstance {
     return err;
   }
 
+  /**
+   * @param {Envelope | string} envelope
+   * @param {string} [description]
+   * @param {MessageInfo | string} [messageInfo]
+   * @param {string} [responseText]
+   * @returns {SmtpResponseError}
+   */
   reject(envelope, description, messageInfo, responseText) {
-    let id;
-
-    if (typeof envelope === "object") {
-      id = envelope.id;
-    } else {
-      id = envelope;
-      envelope = {};
-    }
+    let envelopeContext = getEnvelopeContext(envelope);
+    let id = envelopeContext.id;
+    let envelopeData = envelopeContext.envelope;
 
     description = (description || "").toString().trim();
+    /** @type {AnyRecord} */
     let keys;
-    if (messageInfo && typeof messageInfo.keys === "function") {
-      keys = messageInfo.keys();
+    let info = /** @type {MessageInfo} */ (messageInfo);
+    if (messageInfo && typeof info.keys === "function") {
+      keys = info.keys();
     } else {
       keys = {};
     }
 
-    if (messageInfo && typeof messageInfo.format === "function") {
-      messageInfo = messageInfo.format();
+    if (messageInfo && typeof info.format === "function") {
+      messageInfo = info.format();
     }
     messageInfo = (messageInfo || "").toString().trim();
     responseText = (responseText || "").toString();
@@ -164,8 +255,8 @@ class PluginInstance {
 
     ["interface", "originhost", "transhost", "transtype", "user"].forEach(
       (key) => {
-        if (envelope[key] && !(key in keys)) {
-          keys[key] = envelope[key];
+        if (envelopeData[key] && !(key in keys)) {
+          keys[key] = envelopeData[key];
         }
       }
     );
@@ -184,6 +275,7 @@ class PluginInstance {
       return "";
     });
 
+    /** @type {SmtpResponseError} */
     let err = new Error(responseText);
     err.name = "SMTPReject";
     err.responseCode = code || 550;
@@ -191,25 +283,44 @@ class PluginInstance {
     return err;
   }
 
+  /**
+   * @param {unknown} id
+   * @param {unknown} seq
+   * @param {string} action
+   * @param {AnyRecord} [data]
+   * @returns {void}
+   */
   remotelog(id, seq, action, data) {
     this.manager.remotelog(id, seq, action, data);
   }
 
+  /**
+   * @param {string | GelfMessage} message
+   * @returns {void}
+   */
   loggelf(message) {
     this.manager.loggelf(message);
   }
 }
 
 class PluginHandler {
+  /**
+   * @param {PluginHandlerOptions} [options]
+   */
   constructor(options) {
     options = options || {};
     this.options = options;
 
+    /** @type {PluginQueue | false} */
     this.queue = false;
 
+    /** @type {Map<string, Hook[]>} */
     this.hooks = new Map();
+    /** @type {Set<{ title: string | undefined, filterFunc: RewriteFilterFunc, eventHandler: RewriteEventHandler }>} */
     this.rewriters = new Set();
+    /** @type {Set<{ title: string | undefined, filterFunc: StreamFilterFunc, eventHandler: StreamEventHandler }>} */
     this.streamers = new Set();
+    /** @type {Set<{ title: string | undefined, eventHandler: AnalyzerEventHandler }>} */
     this.analyzers = new Set();
 
     this.context = options.context || "receiver";
@@ -221,15 +332,23 @@ class PluginHandler {
 
     this.logger = options.logger || log;
 
+    /** @type {PluginDefinition[]} */
     this.loaded = [];
 
     this.plugins = this.preparePlugins(options.plugins);
+
+    /** @type {import("./types").ApiServer | undefined} */
+    this.apiServer = undefined;
 
     this.gelf =
       this.options.log && this.options.log.gelf && this.options.log.gelf.enabled
         ? new Gelf(this.options.log.gelf.options)
         : {
             // placeholder
+            /**
+             * @param {string} ev
+             * @param {AnyRecord} entry
+             */
             emit: (ev, entry) =>
               this.logger.info(
                 `Plugins/${process.pid}/GELF`,
@@ -238,6 +357,10 @@ class PluginHandler {
           };
   }
 
+  /**
+   * @param {DoneCallback} done
+   * @returns {NodeJS.Immediate | void}
+   */
   load(done) {
     let curPos = 0;
     let loadNext = () => {
@@ -246,13 +369,16 @@ class PluginHandler {
       }
 
       let plugin = this.plugins[curPos++];
+      if (!plugin) {
+        return loadNext();
+      }
 
       try {
         let loadStartTime = Date.now();
         if (plugin.path.indexOf("/") < 0 && plugin.path.indexOf("\\") < 0) {
           plugin.path = path.join(process.cwd(), "node_modules", plugin.path);
         }
-        plugin.module = require(plugin.path); // eslint-disable-line global-require
+        plugin.module = /** @type {import("./types").PluginModule} */ (require(plugin.path)); // eslint-disable-line global-require
         plugin.title =
           plugin.module.title ||
           (path.parse(plugin.path).name || "").replace(/^[a-z]|-+[a-z]/g, (m) =>
@@ -272,6 +398,7 @@ class PluginHandler {
           return loadNext();
         }
 
+        /** @type {Promise<void>} */
         let p = new Promise((resolve, reject) => {
           plugin.db = this.options.db;
           plugin.logger = this.logger;
@@ -288,7 +415,7 @@ class PluginHandler {
             }
           );
           if (f instanceof Promise) {
-            resolve(f);
+            f.then(resolve, reject);
           }
         });
 
@@ -317,11 +444,12 @@ class PluginHandler {
           })
           .finally(loadNext);
       } catch (E) {
+        let err = /** @type {Error} */ (E);
         this.logger.error(
           `Plugins/${this.context}/${process.pid}`,
           "Failed loading plugin file <%s>: %s",
           path.relative(process.cwd(), plugin.path),
-          E.message
+          err.message
         );
       }
 
@@ -331,6 +459,10 @@ class PluginHandler {
     return setImmediate(loadNext);
   }
 
+  /**
+   * @param {import("./types").PluginsConfig} [pluginData]
+   * @returns {PluginDefinition[]}
+   */
   preparePlugins(pluginData) {
     return Object.keys(pluginData || {})
       .map((key) => {
@@ -397,6 +529,12 @@ class PluginHandler {
       .sort((a, b) => a.ordering - b.ordering);
   }
 
+  /**
+   * @param {string | undefined} title
+   * @param {string} name
+   * @param {HookAction} action
+   * @returns {void}
+   */
   addHook(title, name, action) {
     name = (name || "").toString().toLowerCase().trim();
     let hook = {
@@ -407,10 +545,19 @@ class PluginHandler {
     if (!this.hooks.has(name)) {
       this.hooks.set(name, [hook]);
     } else {
-      this.hooks.get(name).push(hook);
+      let existing = this.hooks.get(name);
+      if (existing) {
+        existing.push(hook);
+      }
     }
   }
 
+  /**
+   * @param {Envelope} envelope
+   * @param {Readable} splitter
+   * @param {Writable} output
+   * @returns {void}
+   */
   runRewriteHooks(envelope, splitter, output) {
     let input = splitter;
 
@@ -423,7 +570,7 @@ class PluginHandler {
         hook.eventHandler(envelope, data.node, data.decoder, data.encoder);
       });
 
-      rewriter.once("error", (err) => {
+      /** @type {import("node:stream").Transform} */ (rewriter).once("error", (err) => {
         input.emit("error", err);
       });
 
@@ -439,6 +586,12 @@ class PluginHandler {
     input.pipe(output);
   }
 
+  /**
+   * @param {Envelope} envelope
+   * @param {Readable} splitter
+   * @param {Writable} output
+   * @returns {void}
+   */
   runStreamHooks(envelope, splitter, output) {
     let input = splitter;
     this.streamers.forEach((hook) => {
@@ -452,7 +605,7 @@ class PluginHandler {
       });
 
       stream.once("error", (err) => {
-        streamer.emit("error", err);
+        /** @type {import("node:stream").Transform} */ (streamer).emit("error", err);
       });
 
       stream.pipe(streamer);
@@ -467,6 +620,12 @@ class PluginHandler {
     input.pipe(output);
   }
 
+  /**
+   * @param {Envelope} envelope
+   * @param {Readable} source
+   * @param {Writable} output
+   * @returns {void}
+   */
   runAnalyzerHooks(envelope, source, output) {
     let input = source;
 
@@ -489,6 +648,11 @@ class PluginHandler {
     input.pipe(output);
   }
 
+  /**
+   * @param {string} name
+   * @param {unknown[]} args
+   * @returns {Promise<void>}
+   */
   async runHooksAsync(name, args) {
     name = (name || "").toString().toLowerCase().trim();
     let hooks = this.hooks.get(name) || [];
@@ -499,6 +663,7 @@ class PluginHandler {
       }
 
       // allow both callbacks and promises as plugin handlers
+      /** @type {Promise<void>} */
       let p = new Promise((resolve, reject) => {
         let f = hook.action(
           ...args,
@@ -511,32 +676,39 @@ class PluginHandler {
           }
         );
         if (f instanceof Promise) {
-          resolve(f);
+          f.then(resolve, reject);
         }
       });
 
       try {
         await p;
       } catch (err) {
+        let error = /** @type {Error & AnyRecord} */ (err);
         // non error "errors" are allowed to break the plugin chain, do not log these
-        if (/Error$/.test(err.name)) {
+        if (/Error$/.test(error.name)) {
           this.logger.error(
             "Plugins",
             '"%s" for "%s" failed with: %s',
             hook.title,
             hook.name,
-            err.stack
+            error.stack
           );
         }
-        err.category = err.category || "plugin";
-        err._source = "PLUGIN";
-        err._sourceName = hook.title;
+        error.category = error.category || "plugin";
+        error._source = "PLUGIN";
+        error._sourceName = hook.title;
 
-        throw err;
+        throw error;
       }
     }
   }
 
+  /**
+   * @param {string} name
+   * @param {unknown[]} args
+   * @param {DoneCallback} done
+   * @returns {void}
+   */
   runHooks(name, args, done) {
     if (!done) {
       // treat as a promise
@@ -549,6 +721,10 @@ class PluginHandler {
       .catch((err) => done(err));
   }
 
+  /**
+   * @param {string | GelfMessage} message
+   * @returns {void}
+   */
   loggelf(message) {
     if (!message) {
       return;
@@ -591,7 +767,15 @@ class PluginHandler {
     this.gelf.emit("gelf.log", message);
   }
 
+  /**
+   * @param {unknown} id
+   * @param {unknown} seq
+   * @param {string} action
+   * @param {AnyRecord} [data]
+   * @returns {void}
+   */
   remotelog(id, seq, action, data) {
+    /** @type {import("./types").RemoteLogEntry} */
     let entry = {
       id,
     };
@@ -614,11 +798,12 @@ class PluginHandler {
       try {
         payload = msgpack.encode(entry);
       } catch (E) {
+        let err = /** @type {Error} */ (E);
         log.error(
           "REMOTELOG",
           '%s Failed encoding message. error="%s"',
           id + (seq ? "." + seq : ""),
-          E.message
+          err.message
         );
       }
 
@@ -634,6 +819,13 @@ class PluginHandler {
     this.runHooks("log:entry", [entry], () => false);
   }
 
+  /**
+   * @param {string} name
+   * @param {string} method
+   * @param {string} path
+   * @param {ApiCallback} callback
+   * @returns {void}
+   */
   addAPIEndpoint(name, method, path, callback) {
     if (this.apiServer && this.apiServer.server) {
       // Missed leading slash ? ... Add it
@@ -654,7 +846,7 @@ class PluginHandler {
             name
           );
         }
-      } catch (E) {
+      } catch {
         this.logger.error(
           "Plugins",
           'Unresolvable API http method "%s" in "%s"',
