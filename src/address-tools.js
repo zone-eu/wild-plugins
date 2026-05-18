@@ -96,7 +96,12 @@ function convertAddresses(addresses, withNames, addressList) {
   addressList = addressList || new Map();
 
   flatten(addresses || []).forEach((address) => {
-    if (address && typeof address === "object" && "address" in address) {
+    if (
+      address &&
+      typeof address === "object" &&
+      "address" in address &&
+      address.address
+    ) {
       let normalized = withNames
         ? normalizeAddress(address, true)
         : normalizeAddress(address);

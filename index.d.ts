@@ -27,7 +27,7 @@ import type {
   ValidatedAddressList,
   PluginsConfig
 } from "./types";
-import type Headers from "@zone-eu/mailsplit/lib/headers";
+import Headers = require("@zone-eu/mailsplit/lib/headers");
 import type { Readable, Writable } from "node:stream";
 
 declare class PluginInstance implements PluginInstanceContext {

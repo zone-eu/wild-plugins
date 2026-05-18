@@ -1,4 +1,4 @@
-import type Headers from "@zone-eu/mailsplit/lib/headers";
+import Headers = require("@zone-eu/mailsplit/lib/headers");
 import type {
   AddressInput,
   NestedArray,
@@ -41,15 +41,15 @@ export function parseAddressList(
   withNames?: boolean
 ): NormalizedAddress[];
 export function parseAddresses(
-  headerList: Array<string | ParsedAddressEntry[]>,
+  headerList: AddressInput[],
   withNames: true
 ): ParsedAddress[];
 export function parseAddresses(
-  headerList: Array<string | ParsedAddressEntry[]>,
+  headerList: AddressInput[],
   withNames?: false
 ): string[];
 export function parseAddresses(
-  headerList: Array<string | ParsedAddressEntry[]>,
+  headerList: AddressInput[],
   withNames?: boolean
 ): NormalizedAddress[];
 export function normalizeDomain(domain: string): string;

@@ -1,6 +1,6 @@
 import type { EventEmitter } from "node:events";
 import type { Readable, Writable } from "node:stream";
-import type Headers from "@zone-eu/mailsplit/lib/headers";
+import Headers = require("@zone-eu/mailsplit/lib/headers");
 import type {
   HeaderLine,
   MimeNode,
