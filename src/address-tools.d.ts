@@ -1,13 +1,13 @@
-import Headers = require("@zone-eu/mailsplit/lib/headers");
 import type {
   AddressInput,
   NestedArray,
   NormalizedAddress,
   ParsedAddress,
   ParsedAddressEntry,
-  RatioItem,
   ValidatedAddressList,
-} from "../types";
+} from "@zone-eu/types";
+import Headers = require("@zone-eu/mailsplit/lib/headers");
+import type { RatioItem } from "../types";
 
 export function validateAddress(headers: Headers, key: string): ValidatedAddressList;
 export function convertAddresses(

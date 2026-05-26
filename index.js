@@ -13,25 +13,25 @@ const os = require("os");
 /**
  * @typedef {import("node:stream").Readable} Readable
  * @typedef {import("node:stream").Writable} Writable
- * @typedef {import("@zone-eu/mailsplit/lib/headers")} Headers
- * @typedef {import("./types").AnalyzerEventHandler} AnalyzerEventHandler
+ * @typedef {import("@zone-eu/types").AnalyzerEventHandler} AnalyzerEventHandler
+ * @typedef {import("@zone-eu/types").AnyRecord} AnyRecord
+ * @typedef {import("@zone-eu/types").DoneCallback} DoneCallback
+ * @typedef {import("@zone-eu/types").Envelope} Envelope
+ * @typedef {import("@zone-eu/types").GelfMessage} GelfMessage
+ * @typedef {import("@zone-eu/types").Headers} Headers
+ * @typedef {import("@zone-eu/types").Hook} Hook
+ * @typedef {import("@zone-eu/types").HookAction} HookAction
+ * @typedef {import("@zone-eu/types").MessageInfo} MessageInfo
+ * @typedef {import("@zone-eu/types").RewriteEventHandler} RewriteEventHandler
+ * @typedef {import("@zone-eu/types").RewriteFilterFunc} RewriteFilterFunc
+ * @typedef {import("@zone-eu/types").SmtpResponseError} SmtpResponseError
+ * @typedef {import("@zone-eu/types").StreamEventHandler} StreamEventHandler
+ * @typedef {import("@zone-eu/types").StreamFilterFunc} StreamFilterFunc
+ * @typedef {import("@zone-eu/types").ValidatedAddressList} ValidatedAddressList
  * @typedef {import("./types").ApiCallback} ApiCallback
- * @typedef {import("./types").AnyRecord} AnyRecord
- * @typedef {import("./types").DoneCallback} DoneCallback
- * @typedef {import("./types").Envelope} Envelope
- * @typedef {import("./types").GelfMessage} GelfMessage
- * @typedef {import("./types").Hook} Hook
- * @typedef {import("./types").HookAction} HookAction
- * @typedef {import("./types").MessageInfo} MessageInfo
  * @typedef {import("./types").PluginDefinition} PluginDefinition
  * @typedef {import("./types").PluginHandlerOptions} PluginHandlerOptions
  * @typedef {import("./types").PluginQueue} PluginQueue
- * @typedef {import("./types").RewriteEventHandler} RewriteEventHandler
- * @typedef {import("./types").RewriteFilterFunc} RewriteFilterFunc
- * @typedef {import("./types").SmtpResponseError} SmtpResponseError
- * @typedef {import("./types").StreamEventHandler} StreamEventHandler
- * @typedef {import("./types").StreamFilterFunc} StreamFilterFunc
- * @typedef {import("./types").ValidatedAddressList} ValidatedAddressList
  */
 
 /**
@@ -775,7 +775,7 @@ class PluginHandler {
    * @returns {void}
    */
   remotelog(id, seq, action, data) {
-    /** @type {import("./types").RemoteLogEntry} */
+    /** @type {import("@zone-eu/types").RemoteLogEntry} */
     let entry = {
       id,
     };
