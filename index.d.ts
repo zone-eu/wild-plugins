@@ -1,21 +1,14 @@
 import type {
   AnalyzerEventHandler,
-  ApiCallback,
   AnyRecord,
-  ApiServer,
   DoneCallback,
   Envelope,
   GelfEmitter,
   GelfMessage,
+  Headers,
   Hook,
   HookAction,
   Logger,
-  PluginDefinition,
-  PluginHandlerOptions,
-  PluginInstanceContext,
-  PluginConfigInput,
-  PluginDatabase,
-  PluginQueue,
   RewriteEventHandler,
   RewriteFilterFunc,
   SmtpResponseError,
@@ -25,9 +18,18 @@ import type {
   MongoDbLike,
   RedisLike,
   ValidatedAddressList,
-  PluginsConfig
+} from "@zone-eu/types";
+import type {
+  ApiCallback,
+  ApiServer,
+  PluginDefinition,
+  PluginHandlerOptions,
+  PluginInstanceContext,
+  PluginConfigInput,
+  PluginDatabase,
+  PluginQueue,
+  PluginsConfig,
 } from "./types";
-import Headers = require("@zone-eu/mailsplit/lib/headers");
 import type { Readable, Writable } from "node:stream";
 
 declare class PluginInstance implements PluginInstanceContext {

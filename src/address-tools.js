@@ -5,14 +5,15 @@ let punycode = require("punycode.js");
 let libmime = require("libmime");
 
 /**
- * @typedef {import("@zone-eu/mailsplit/lib/headers")} Headers
- * @typedef {import("../types").ParsedAddress} ParsedAddress
- * @typedef {import("../types").ParsedAddressGroup} ParsedAddressGroup
  * @typedef {import("../types").AddressInput} AddressInput
+ * @typedef {import("../types").AnyRecord} AnyRecord
+ * @typedef {import("@zone-eu/mailsplit/lib/headers")} Headers
  * @typedef {import("../types").NormalizedAddress} NormalizedAddress
+ * @typedef {import("../types").ParsedAddress} ParsedAddress
  * @typedef {import("../types").ParsedAddressEntry} ParsedAddressEntry
- * @typedef {import("../types").RatioItem} RatioItem
+ * @typedef {import("../types").ParsedAddressGroup} ParsedAddressGroup
  * @typedef {import("../types").ValidatedAddressList} ValidatedAddressList
+ * @typedef {import("../types").RatioItem} RatioItem
  */
 
 module.exports = {
@@ -225,7 +226,7 @@ function divideLoad(pool) {
     /** @type {T} */
     let copy = {};
     Object.keys(item || {}).forEach((key) => {
-      /** @type {import("../types").AnyRecord} */ (copy)[key] = item[key];
+      /** @type {AnyRecord} */ (copy)[key] = item[key];
     });
 
     if (copy.ratio) {
