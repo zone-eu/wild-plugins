@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.7](https://github.com/zone-eu/wild-plugins/compare/v1.0.6...v1.0.7) (2026-05-26)
+
+
+### Bug Fixes
+
+* ZMS-63: Import @zone-eu/types and use them ([#16](https://github.com/zone-eu/wild-plugins/issues/16)) ([2bf93f1](https://github.com/zone-eu/wild-plugins/commit/2bf93f1e47decdaf5c7491f8570d5e78ad34ecbd))
+
 ## [1.0.6](https://github.com/zone-eu/wild-plugins/compare/v1.0.5...v1.0.6) (2026-05-18)
 
 
