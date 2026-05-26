@@ -41,7 +41,7 @@
   },
   "dependencies": {
     "@zone-eu/mailsplit": "5.4.10",
-    "@zone-eu/types": "0.1.4",
+    "@zone-eu/types": "^0.1.4",
     "dgram": "1.0.1",
     "gelf": "2.0.1",
     "libmime": "5.3.8",
