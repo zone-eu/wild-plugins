@@ -37,11 +37,12 @@
     "eslint": "10.3.0",
     "eslint-config-nodemailer": "1.2.0",
     "eslint-config-prettier": "10.1.8",
+    "ioredis": "5.10.1",
+    "mongodb": "4.17.2",
     "typescript": "6.0.3"
   },
   "dependencies": {
     "@zone-eu/mailsplit": "5.4.10",
-    "@zone-eu/types": "^0.1.4",
     "dgram": "1.0.1",
     "gelf": "2.0.1",
     "libmime": "5.3.8",
@@ -49,5 +50,8 @@
     "nodemailer": "8.0.7",
     "npmlog": "7.0.1",
     "punycode.js": "2.3.1"
+  },
+  "peerDependencies": {
+    "@zone-eu/types": "^0.1.4"
   }
 }
