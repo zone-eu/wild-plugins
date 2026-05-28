@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.9](https://github.com/zone-eu/wild-plugins/compare/v1.0.8...v1.0.9) (2026-05-28)
+
+
+### Bug Fixes
+
+* ZMS-63: update deps, types refactoring, add strict typing to index.js ([#20](https://github.com/zone-eu/wild-plugins/issues/20)) ([263f00e](https://github.com/zone-eu/wild-plugins/commit/263f00e3cad8632a6044badf8e97097d435cf5ad))
+
 ## [1.0.8](https://github.com/zone-eu/wild-plugins/compare/v1.0.7...v1.0.8) (2026-05-28)
 
 
