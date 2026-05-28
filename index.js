@@ -1,3 +1,4 @@
+// @ts-check
 "use strict";
 
 const path = require("path");
@@ -13,21 +14,24 @@ const os = require("os");
 /**
  * @typedef {import("node:stream").Readable} Readable
  * @typedef {import("node:stream").Writable} Writable
- * @typedef {import("@zone-eu/types").AnalyzerEventHandler} AnalyzerEventHandler
- * @typedef {import("@zone-eu/types").AnyRecord} AnyRecord
- * @typedef {import("@zone-eu/types").DoneCallback} DoneCallback
- * @typedef {import("@zone-eu/types").Envelope} Envelope
- * @typedef {import("@zone-eu/types").GelfMessage} GelfMessage
- * @typedef {import("@zone-eu/types").Headers} Headers
- * @typedef {import("@zone-eu/types").Hook} Hook
- * @typedef {import("@zone-eu/types").HookAction} HookAction
- * @typedef {import("@zone-eu/types").MessageInfo} MessageInfo
- * @typedef {import("@zone-eu/types").RewriteEventHandler} RewriteEventHandler
- * @typedef {import("@zone-eu/types").RewriteFilterFunc} RewriteFilterFunc
- * @typedef {import("@zone-eu/types").SmtpResponseError} SmtpResponseError
- * @typedef {import("@zone-eu/types").StreamEventHandler} StreamEventHandler
- * @typedef {import("@zone-eu/types").StreamFilterFunc} StreamFilterFunc
- * @typedef {import("@zone-eu/types").ValidatedAddressList} ValidatedAddressList
+ * @typedef {import("./types").AnalyzerEventHandler} AnalyzerEventHandler
+ * @typedef {import("./types").AnyRecord} AnyRecord
+ * @typedef {import("./types").DoneCallback} DoneCallback
+ * @typedef {import("./types").Envelope} Envelope
+ * @typedef {import("./types").GelfMessage} GelfMessage
+ * @typedef {import("./types").Headers} Headers
+ * @typedef {import("./types").Hook} Hook
+ * @typedef {import("./types").HookAction} HookAction
+ * @typedef {import("./types").MessageInfo} MessageInfo
+ * @typedef {import("./types").PluginConfig} PluginConfig
+ * @typedef {import("./types").PluginConfigInput} PluginConfigInput
+ * @typedef {import("./types").RemoteLogEntry} RemoteLogEntry
+ * @typedef {import("./types").RewriteEventHandler} RewriteEventHandler
+ * @typedef {import("./types").RewriteFilterFunc} RewriteFilterFunc
+ * @typedef {import("./types").SmtpResponseError} SmtpResponseError
+ * @typedef {import("./types").StreamEventHandler} StreamEventHandler
+ * @typedef {import("./types").StreamFilterFunc} StreamFilterFunc
+ * @typedef {import("./types").ValidatedAddressList} ValidatedAddressList
  * @typedef {import("./types").ApiCallback} ApiCallback
  * @typedef {import("./types").PluginDefinition} PluginDefinition
  * @typedef {import("./types").PluginHandlerOptions} PluginHandlerOptions
@@ -61,7 +65,9 @@ class PluginInstance {
     this.manager = manager;
     this.options = options || {};
     this.logger = manager.logger;
-    this.db = options.db;
+    /** @type {import("./types").PluginDatabase} */
+    this.db = options.db || {};
+    /** @type {PluginConfigInput} */
     this.config = options.config || {};
     this.mongodb = this.db.senderDb;
     this.redis = this.db.redis;
@@ -78,7 +84,7 @@ class PluginInstance {
             emit: (ev, entry) =>
               this.logger.info(
                 `Plugins/${process.pid}/GELF`,
-                JSON.stringify(entry)
+                JSON.stringify(entry),
               ),
           };
   }
@@ -208,7 +214,7 @@ class PluginInstance {
       "%s DROP" +
       (description ? "[" + description + "]" : "") +
       (messageInfo ? " (" + messageInfo + ")" : "");
-    this.logger.info(this.options.title, msg, id);
+    this.logger.info(this.options.title || "", msg, id);
 
     responseText = responseText.replace(/^\d{3}\s+/, "");
 
@@ -258,7 +264,7 @@ class PluginInstance {
         if (envelopeData[key] && !(key in keys)) {
           keys[key] = envelopeData[key];
         }
-      }
+      },
     );
 
     this.manager.remotelog(id, false, "NOQUEUE", keys);
@@ -267,7 +273,7 @@ class PluginInstance {
       "%s NOQUEUE" +
       (description ? "[" + description + "]" : "") +
       (messageInfo ? " (" + messageInfo + ")" : "");
-    this.logger.info(this.options.title, msg, id);
+    this.logger.info(this.options.title || "", msg, id);
 
     let code;
     responseText = responseText.replace(/^(\d{3})\s+/, (str, c) => {
@@ -352,7 +358,7 @@ class PluginHandler {
             emit: (ev, entry) =>
               this.logger.info(
                 `Plugins/${process.pid}/GELF`,
-                JSON.stringify(entry)
+                JSON.stringify(entry),
               ),
           };
   }
@@ -378,21 +384,24 @@ class PluginHandler {
         if (plugin.path.indexOf("/") < 0 && plugin.path.indexOf("\\") < 0) {
           plugin.path = path.join(process.cwd(), "node_modules", plugin.path);
         }
-        plugin.module = /** @type {import("./types").PluginModule} */ (require(plugin.path)); // eslint-disable-line global-require
+        const pluginModule = /** @type {import("./types").PluginModule} */ (
+          require(plugin.path) // eslint-disable-line global-require
+        );
+        plugin.module = pluginModule;
         plugin.title =
-          plugin.module.title ||
+          pluginModule.title ||
           (path.parse(plugin.path).name || "").replace(/^[a-z]|-+[a-z]/g, (m) =>
-            m.replace(/[-]/g, "").toUpperCase()
+            m.replace(/[-]/g, "").toUpperCase(),
           );
 
-        if (!plugin.module || typeof plugin.module.init !== "function") {
+        if (!plugin.module || typeof pluginModule.init !== "function") {
           let loadTime = Date.now() - loadStartTime;
           this.logger.info(
             `Plugins/${this.context}/${process.pid}`,
             "Plugin %s from <%s> does not have an init method [load time %sms]",
             plugin.title,
             path.relative(process.cwd(), plugin.path),
-            loadTime
+            loadTime,
           );
           // not much to do here
           return loadNext();
@@ -400,20 +409,22 @@ class PluginHandler {
 
         /** @type {Promise<void>} */
         let p = new Promise((resolve, reject) => {
-          plugin.db = this.options.db;
+          plugin.db = this.options.db || {};
           plugin.logger = this.logger;
           plugin.log = this.options.log;
 
-          let f = plugin.module.init(
-            new PluginInstance(this, plugin),
-            // If the handler uses promises then this callback is never called
-            (err) => {
-              if (err) {
-                return reject(err);
-              }
-              resolve();
+          /**
+           * @param {Error | null | undefined} err
+           * @returns {void}
+           */
+          let done = (err) => {
+            if (err) {
+              return reject(err);
             }
-          );
+            resolve();
+          };
+
+          let f = pluginModule.init(new PluginInstance(this, plugin), done);
           if (f instanceof Promise) {
             f.then(resolve, reject);
           }
@@ -427,7 +438,7 @@ class PluginHandler {
               "Initialized %s from <%s> [load time %sms]",
               plugin.title,
               path.relative(process.cwd(), plugin.path),
-              loadTime
+              loadTime,
             );
             this.loaded.push(plugin);
           })
@@ -439,7 +450,7 @@ class PluginHandler {
               plugin.title,
               path.relative(process.cwd(), plugin.path),
               err.message,
-              loadTime
+              loadTime,
             );
           })
           .finally(loadNext);
@@ -449,7 +460,7 @@ class PluginHandler {
           `Plugins/${this.context}/${process.pid}`,
           "Failed loading plugin file <%s>: %s",
           path.relative(process.cwd(), plugin.path),
-          err.message
+          err.message,
         );
       }
 
@@ -464,69 +475,77 @@ class PluginHandler {
    * @returns {PluginDefinition[]}
    */
   preparePlugins(pluginData) {
-    return Object.keys(pluginData || {})
-      .map((key) => {
-        if (!key) {
-          return;
-        }
+    pluginData = pluginData || {};
 
-        if (
-          !pluginData[key] ||
-          (pluginData[key] !== true && !pluginData[key].enabled)
-        ) {
-          // disabled
-          return;
-        }
+    /** @type {PluginDefinition[]} */
+    const plugins = [];
 
-        let pluginPath;
-        if (/^[./]*modules\//.test(key)) {
-          pluginPath = key.replace(/^[./]*modules\//, "");
-        } else {
-          pluginPath = path.resolve(
-            /^[./]*core\//.test(key) ? this.corePluginsPath : this.pluginsPath,
-            key
-          );
-        }
+    Object.keys(pluginData).forEach((key) => {
+      if (!key) {
+        return;
+      }
 
-        let pluginConfig =
-          pluginData[key] !== true
-            ? pluginData[key]
-            : {
-                enabled: true,
-                ordering: Infinity,
-              };
+      const pluginConfigInput = pluginData[key];
+      if (
+        !pluginConfigInput ||
+        (pluginConfigInput !== true && !pluginConfigInput.enabled)
+      ) {
+        // disabled
+        return;
+      }
 
-        // Only load plugins with correct context. If context is not set then default to "main"
-        let allowedContext = []
-          .concat(pluginConfig.enabled || "receiver")
-          .map((context) => {
-            if (context === true) {
-              return "*";
-            }
-
-            if (typeof context !== "string") {
-              return "receiver";
-            }
-
-            return context.toString().toLowerCase().trim();
-          });
-
-        if (
-          !allowedContext.includes(this.context) &&
-          !allowedContext.includes("*")
-        ) {
-          return;
-        }
-
-        return {
+      let pluginPath;
+      if (/^[./]*modules\//.test(key)) {
+        pluginPath = key.replace(/^[./]*modules\//, "");
+      } else {
+        pluginPath = path.resolve(
+          /^[./]*core\//.test(key) ? this.corePluginsPath : this.pluginsPath,
           key,
-          path: pluginPath,
-          ordering: Number(pluginConfig.ordering) || Infinity,
-          config: pluginData[key],
-        };
-      })
-      .filter((plugin) => plugin)
-      .sort((a, b) => a.ordering - b.ordering);
+        );
+      }
+
+      /** @type {PluginConfig} */
+      let pluginConfig =
+        pluginConfigInput !== true
+          ? pluginConfigInput
+          : {
+              enabled: true,
+              ordering: Infinity,
+            };
+
+      const enabled = pluginConfig.enabled || "receiver";
+      /** @type {Array<boolean | string>} */
+      const enabledContexts = Array.isArray(enabled) ? enabled : [enabled];
+
+      // Only load plugins with correct context. If context is not set then default to "main"
+      const allowedContext = enabledContexts.map((context) => {
+        if (context === true) {
+          return "*";
+        }
+
+        if (typeof context !== "string") {
+          return "receiver";
+        }
+
+        return context.toString().toLowerCase().trim();
+      });
+
+      if (
+        !allowedContext.includes(this.context) &&
+        !allowedContext.includes("*")
+      ) {
+        return;
+      }
+
+      plugins.push({
+        key,
+        path: pluginPath,
+        ordering: Number(pluginConfig.ordering) || Infinity,
+        config: /** @type {PluginConfigInput} */ (pluginConfigInput),
+      });
+    });
+
+    return plugins.sort((a, b) => a.ordering - b.ordering);
   }
 
   /**
@@ -563,16 +582,19 @@ class PluginHandler {
 
     this.rewriters.forEach((hook) => {
       let rewriter = new mailsplit.Rewriter((node) =>
-        hook.filterFunc(envelope, node)
+        hook.filterFunc(envelope, node),
       );
 
       rewriter.on("node", (data) => {
         hook.eventHandler(envelope, data.node, data.decoder, data.encoder);
       });
 
-      /** @type {import("node:stream").Transform} */ (rewriter).once("error", (err) => {
-        input.emit("error", err);
-      });
+      /** @type {import("node:stream").Transform} */ (rewriter).once(
+        "error",
+        (err) => {
+          input.emit("error", err);
+        },
+      );
 
       input.pipe(rewriter);
 
@@ -596,7 +618,7 @@ class PluginHandler {
     let input = splitter;
     this.streamers.forEach((hook) => {
       let streamer = new mailsplit.Streamer((node) =>
-        hook.filterFunc(envelope, node)
+        hook.filterFunc(envelope, node),
       );
       let stream = input;
 
@@ -605,7 +627,10 @@ class PluginHandler {
       });
 
       stream.once("error", (err) => {
-        /** @type {import("node:stream").Transform} */ (streamer).emit("error", err);
+        /** @type {import("node:stream").Transform} */ (streamer).emit(
+          "error",
+          err,
+        );
       });
 
       stream.pipe(streamer);
@@ -665,15 +690,21 @@ class PluginHandler {
       // allow both callbacks and promises as plugin handlers
       /** @type {Promise<void>} */
       let p = new Promise((resolve, reject) => {
+        /**
+         * @param {Error | null | undefined} err
+         * @returns {void}
+         */
+        const done = (err) => {
+          if (err) {
+            return reject(err);
+          }
+          resolve();
+        };
+
         let f = hook.action(
           ...args,
           // If the handler uses promises then this callback is never called
-          (err) => {
-            if (err) {
-              return reject(err);
-            }
-            resolve();
-          }
+          done,
         );
         if (f instanceof Promise) {
           f.then(resolve, reject);
@@ -691,7 +722,7 @@ class PluginHandler {
             '"%s" for "%s" failed with: %s',
             hook.title,
             hook.name,
-            error.stack
+            error.stack,
           );
         }
         error.category = error.category || "plugin";
@@ -707,7 +738,7 @@ class PluginHandler {
    * @param {string} name
    * @param {unknown[]} args
    * @param {DoneCallback} done
-   * @returns {void}
+   * @returns {void | Promise<void>}
    */
   runHooks(name, args, done) {
     if (!done) {
@@ -775,7 +806,7 @@ class PluginHandler {
    * @returns {void}
    */
   remotelog(id, seq, action, data) {
-    /** @type {import("@zone-eu/types").RemoteLogEntry} */
+    /** @type {RemoteLogEntry} */
     let entry = {
       id,
     };
@@ -794,6 +825,7 @@ class PluginHandler {
     }
 
     if (this.options.log && this.options.log.remote) {
+      /** @type {Buffer} */
       let payload;
       try {
         payload = msgpack.encode(entry);
@@ -803,8 +835,9 @@ class PluginHandler {
           "REMOTELOG",
           '%s Failed encoding message. error="%s"',
           id + (seq ? "." + seq : ""),
-          err.message
+          err.message,
         );
+        return;
       }
 
       let client = dgram.createSocket(this.options.log.remote.protocol);
@@ -812,7 +845,7 @@ class PluginHandler {
         payload,
         this.options.log.remote.port,
         this.options.log.remote.host || "localhost",
-        () => client.close()
+        () => client.close(),
       );
     }
 
@@ -837,13 +870,18 @@ class PluginHandler {
       let fn = method.toLowerCase();
       let fullPath = "/plugin/" + name + path;
       try {
-        if (this.apiServer.server[fn](fullPath, callback)) {
+        const routeRegistrar = this.apiServer.server[fn];
+        if (typeof routeRegistrar !== "function") {
+          throw new Error(`Unsupported API http method "${fn}"`);
+        }
+
+        if (routeRegistrar(fullPath, callback)) {
           this.logger.verbose(
             "Plugins",
             'Plugin endpoint %s "%s" successfully registered for "%s"',
             method,
             fullPath,
-            name
+            name,
           );
         }
       } catch {
@@ -851,7 +889,7 @@ class PluginHandler {
           "Plugins",
           'Unresolvable API http method "%s" in "%s"',
           fn,
-          name
+          name,
         );
       }
     }
