@@ -15,11 +15,9 @@ import type {
   StreamEventHandler,
   StreamFilterFunc,
   MessageInfo,
-  MongoDbLike,
-  RedisLike,
+  MongoDatabase,
+  RedisClient,
   ValidatedAddressList,
-} from "@zone-eu/types";
-import type {
   ApiCallback,
   ApiServer,
   PluginDefinition,
@@ -38,9 +36,9 @@ declare class PluginInstance implements PluginInstanceContext {
   options: PluginDefinition;
   logger: Logger;
   db: PluginDatabase;
-  config: PluginConfigInput | AnyRecord;
-  mongodb?: MongoDbLike | false;
-  redis?: RedisLike;
+  config: PluginConfigInput;
+  mongodb?: MongoDatabase | false;
+  redis?: RedisClient | false;
   gelf: GelfEmitter;
   addHook(name: string, action: HookAction): void;
   addRewriteHook(filterFunc: RewriteFilterFunc, eventHandler: RewriteEventHandler): void;

@@ -1,3 +1,4 @@
+//@ts-check
 "use strict";
 
 let addressparser = require("nodemailer/lib/addressparser");
@@ -53,7 +54,9 @@ function validateAddress(headers, key) {
       let address = flatten([...arguments]);
       /** @type {string[]} */
       let values = [];
-      /** @type {ParsedAddress[]} */ (parseAddresses(address || [], true)).forEach((parsed) => {
+      /** @type {ParsedAddress[]} */ (
+        parseAddresses(address || [], true)
+      ).forEach((parsed) => {
         if (!parsed || !parsed.address) {
           return;
         }
@@ -74,7 +77,7 @@ function validateAddress(headers, key) {
         values.push(
           parsed.name
             ? parsed.name + " <" + parsed.address + ">"
-            : parsed.address
+            : parsed.address,
         );
       });
 
@@ -126,7 +129,7 @@ function convertAddresses(addresses, withNames, addressList) {
 function parseAddressList(headers, key, withNames) {
   return parseAddresses(
     headers.getDecoded(key).map((header) => header.value),
-    withNames
+    withNames,
   );
 }
 
@@ -143,7 +146,7 @@ function parseAddresses(headerList, withNames) {
       }
       return address;
     }),
-    withNames
+    withNames,
   );
   return Array.from(map).map((entry) => entry[1]);
 }
@@ -207,9 +210,7 @@ function flatten(arr) {
   let flat = /** @type {Array<T | T[]>} */ (
     [].concat(.../** @type {any[]} */ (arr))
   );
-  return /** @type {T[]} */ (
-    flat.some(Array.isArray) ? flatten(flat) : flat
-  );
+  return /** @type {T[]} */ (flat.some(Array.isArray) ? flatten(flat) : flat);
 }
 
 /**

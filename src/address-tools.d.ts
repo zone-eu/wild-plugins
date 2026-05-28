@@ -5,7 +5,7 @@ import type {
   ParsedAddress,
   ParsedAddressEntry,
   ValidatedAddressList,
-} from "@zone-eu/types";
+} from "../types";
 import Headers = require("@zone-eu/mailsplit/lib/headers");
 import type { RatioItem } from "../types";
 

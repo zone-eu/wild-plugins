@@ -8,8 +8,17 @@ import type {
   Hook,
   HookAction,
   Logger,
-  MailQueueLike,
+  MailDrop,
+  MailQueue as ZoneMailQueue,
   MaybePromise,
+  MongoClient,
+  MongoCollection,
+  MongoDatabase,
+  MongoGridFSBucket,
+  MongoUpdateFilter,
+  PluginConfigObject,
+  RedisClient,
+  RedisClientOptions,
   RewriteEventHandler,
   RewriteFilterFunc,
   StreamEventHandler,
@@ -27,7 +36,6 @@ export type {
   DatabaseConnections,
   DeliveryEnvelope,
   DkimEnvelopeInfo,
-  Db,
   DoneCallback,
   Envelope,
   EnvelopeAddressList,
@@ -35,26 +43,26 @@ export type {
   EnvelopeHeaders,
   GelfEmitter,
   GelfMessage,
-  GridFSBucket,
   Headers,
   Hook,
   HookAction,
   HookHandler,
   Logger,
-  MailDropLike,
-  MailQueueLike,
+  MailDrop,
   MaybePromise,
   MessageHeadersEnvelope,
   MessageHookEnvelope,
   MessageInfo,
   MessageInfoFields,
-  MongoClientLike,
-  MongoCollectionLike,
-  MongoDbLike,
-  MongoGridFSBucketLike,
+  MongoClient,
+  MongoCollection,
+  MongoDatabase,
+  MongoGridFSBucket,
+  MongoUpdateFilter,
   NestedArray,
   NormalizedAddress,
   ParsedAddress,
+  PluginConfigObject,
   ParsedAddressEntry,
   ParsedAddressGroup,
   ParsedEnvelope,
@@ -69,10 +77,8 @@ export type {
   QueueRouting,
   QueueShiftOptions,
   QueueStatus,
-  Redis,
-  RedisLike,
-  RedisOptions,
-  RedisOptionsLike,
+  RedisClient,
+  RedisClientOptions,
   RemoteLogEntry,
   RewriteEventHandler,
   RewriteFilterFunc,
@@ -99,8 +105,6 @@ export type {
   SniData,
   StreamEventHandler,
   StreamFilterFunc,
-  UpdateFilter,
-  UpdateFilterLike,
   ValidatedAddressList,
   VirusScanResult,
   ZoneMtaHookArgumentMap,
@@ -112,8 +116,23 @@ export type {
   ZoneMtaPluginTools,
 } from "@zone-eu/types";
 
-export type PluginQueue = Partial<MailQueueLike> & AnyRecord;
-export type MailQueue = MailQueueLike;
+export type Db = MongoDatabase;
+export type GridFSBucket = MongoGridFSBucket;
+export type MailDropLike = MailDrop;
+export type MailQueueLike = ZoneMailQueue;
+export type MongoClientLike = MongoClient;
+export type MongoCollectionLike = MongoCollection;
+export type MongoDbLike = MongoDatabase;
+export type MongoGridFSBucketLike = MongoGridFSBucket;
+export type Redis = RedisClient;
+export type RedisLike = RedisClient;
+export type RedisOptions = RedisClientOptions;
+export type RedisOptionsLike = RedisClientOptions;
+export type UpdateFilter<TSchema = unknown> = MongoUpdateFilter<TSchema>;
+export type UpdateFilterLike<TSchema = unknown> = MongoUpdateFilter<TSchema>;
+
+export type PluginQueue = Partial<ZoneMailQueue> & AnyRecord;
+export type MailQueue = ZoneMailQueue;
 
 export interface RemoteLogOptions {
   protocol: "udp4" | "udp6";
@@ -135,7 +154,7 @@ export interface LogOptions {
 
 export type PluginDatabase = DatabaseConnections;
 
-export interface PluginConfig extends AnyRecord {
+export interface PluginConfig extends PluginConfigObject {
   enabled?: boolean | string | Array<boolean | string>;
   ordering?: number;
   path?: string;
