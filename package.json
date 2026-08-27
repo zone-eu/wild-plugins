@@ -47,7 +47,7 @@
     "gelf": "2.0.1",
     "libmime": "5.3.8",
     "msgpack-js": "0.3.0",
-    "nodemailer": "8.0.7",
+    "nodemailer": "9.0.5",
     "npmlog": "7.0.1",
     "punycode.js": "2.3.1"
   },
