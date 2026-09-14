@@ -31,23 +31,23 @@
   },
   "devDependencies": {
     "@types/libmime": "5.3.0",
-    "@types/node": "25.7.0",
-    "@types/nodemailer": "8.0.0",
+    "@types/node": "26.5.1",
+    "@types/nodemailer": "8.0.1",
     "@types/npmlog": "7.0.0",
-    "eslint": "10.3.0",
+    "eslint": "10.10.0",
     "eslint-config-nodemailer": "1.2.0",
     "eslint-config-prettier": "10.1.8",
     "ioredis": "5.10.1",
     "mongodb": "4.17.2",
-    "typescript": "6.0.3"
+    "typescript": "7.0.2"
   },
   "dependencies": {
-    "@zone-eu/mailsplit": "5.4.10",
+    "@zone-eu/mailsplit": "5.4.16",
     "dgram": "1.0.1",
     "gelf": "2.0.1",
-    "libmime": "5.3.8",
+    "libmime": "5.4.3",
     "msgpack-js": "0.3.0",
-    "nodemailer": "8.0.7",
+    "nodemailer": "10.0.9",
     "npmlog": "7.0.1",
     "punycode.js": "2.3.1"
   },
