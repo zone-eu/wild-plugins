@@ -1,13 +1,12 @@
 //@ts-check
 "use strict";
 
-let addressparser = require("nodemailer/lib/addressparser");
+let addressparser = require("nodemailer/lib/addressparser").default;
 let punycode = require("punycode.js");
 let libmime = require("libmime");
 
 /**
  * @typedef {import("../types").AddressInput} AddressInput
- * @typedef {import("../types").AnyRecord} AnyRecord
  * @typedef {import("@zone-eu/mailsplit/lib/headers")} Headers
  * @typedef {import("../types").NormalizedAddress} NormalizedAddress
  * @typedef {import("../types").ParsedAddress} ParsedAddress
@@ -224,11 +223,7 @@ function divideLoad(pool) {
   let customShareRatio = 0;
 
   pool = pool.map((item) => {
-    /** @type {T} */
-    let copy = {};
-    Object.keys(item || {}).forEach((key) => {
-      /** @type {AnyRecord} */ (copy)[key] = item[key];
-    });
+    let copy = { ...item };
 
     if (copy.ratio) {
       copy.ratio = Math.min(Math.max(copy.ratio, 0), 1);
