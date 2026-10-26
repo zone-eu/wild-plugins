@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.12](https://github.com/zone-eu/wild-plugins/compare/v1.0.11...v1.0.12) (2026-10-26)
+
+
+### Bug Fixes
+
+* bump deps ([#27](https://github.com/zone-eu/wild-plugins/issues/27)) ([d309fb9](https://github.com/zone-eu/wild-plugins/commit/d309fb9fe6854846d722b67a8e75aad49d7392ec))
+
 ## [1.0.11](https://github.com/zone-eu/wild-plugins/compare/v1.0.10...v1.0.11) (2026-10-08)
 
 
